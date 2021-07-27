@@ -1,5 +1,5 @@
 # PrismJS-Live-Lite
-### Demo: https://cyfung1031.github.io/PrismJS-Live-Lite/index.html ###
+### Demo: https://cyfung1031.github.io/PrismJS-Live-Lite/ ###
 
 ## About ##
 
