@@ -479,6 +479,32 @@ var PL = Prism.Live = class PrismLive {
 		return PL.languages[lang] || PL.languages.DEFAULT;
 	}
 
+
+	_update (force) {
+		var code = this.value;
+
+		// If code ends in newline then browser "conveniently" trims it
+		// but we want to see the new line we just inserted!
+		// So we insert a zero-width space, which isn't trimmed
+		if (/\n$/.test(this.value)) {
+			code += "\u200b";
+		}
+
+		if (!force && this.code.textContent === code && this.code.querySelector(".token")) {
+			// Already highlighted
+			return;
+		}
+
+		this.unobserve();
+		this.code.textContent = code;
+
+		//for(var k in this.code){ if(typeof this.code[k]=='function' && (this.code[k]+'').indexOf('native')>0)continue; if(this.code[k]===null)continue;  console.log(k)}
+
+		Prism.highlightElement(this.code);
+
+		this.observe();
+	}
+
 	update () {
  
 
@@ -521,6 +547,9 @@ var PL = Prism.Live = class PrismLive {
 					//this.pre = null;
 
 
+
+					let update_result = 0;
+
 					const highlighting=(vCode)=>{
 
 						
@@ -532,7 +561,11 @@ var PL = Prism.Live = class PrismLive {
 						if(!divParent.classList.contains('prism-editing-pending'))
 						divParent.classList.add('prism-editing-pending')
 
+						let line_numbers = (vCode.__onPageCode__||vCode)?.querySelector('.line-numbers-rows')
+						if(line_numbers) line_numbers.remove();
 						Prism.highlightElement(vCode, false);
+						//let line_numbers_after = (vCode.__onPageCode__||vCode)?.querySelector('.line-numbers-rows')
+						update_result=vCode.__effective_update__
 
 						
 						if(this.__cid___unready>0) this.__cid___unready=clearTimeout(this.__cid___unready)
@@ -549,11 +582,12 @@ var PL = Prism.Live = class PrismLive {
 	
 							let vCode_P = bCode.parentNode.cloneNode(false), vCode = bCode.cloneNode(false);
 							vCode_P.appendChild(vCode);
+
+							//console.log(565,vCode_P);
 	
 						vCode.__onPageCode__ = bCode;
 						vCode.textContent = code;
 						
-						Prism.__effective_update_highlightedCode = null;
 	
 	
 	
@@ -579,10 +613,6 @@ var PL = Prism.Live = class PrismLive {
 						
 						if( baseCodeValue !== this.value) return update_resolve();
 						 
-						if(Prism.__effective_update_highlightedCode===NO_REPLACEMENT){
-							isEU=true;
-							//console.log(1233)
-						}
 	
 						subtask(vCode);
 	
@@ -616,8 +646,7 @@ var PL = Prism.Live = class PrismLive {
 						this.pre = null;
 						this.code = null;
 	
-
-						if(!isEU){
+						if(!(update_result >= 1)){
 
 							//initial
 
@@ -635,7 +664,6 @@ var PL = Prism.Live = class PrismLive {
 							delete vCode.__onPageCode__;
 							vCode.textContent = this.value;
 							
-							Prism.__effective_update_highlightedCode = null;
 	
 							highlighting(vCode);
 	
@@ -689,6 +717,10 @@ var PL = Prism.Live = class PrismLive {
 		this.update();
 	}
 
+	updateScrollBarVar_minorFix(a,b){  
+		//prevent +- alternation
+		if(a<b && a>0 && b>0 && -2*(a-b)/(a+b)<0.2) return true;
+	}
 
 	updateScrollBarVar(){
 		
@@ -696,8 +728,22 @@ var PL = Prism.Live = class PrismLive {
 		let styleElm = (pre.closest('div.prism-live')||pre);
 		if(!styleElm) return;
 
-		styleElm.style.setProperty('--prism-textarea-scrollbar-width',`${this.textarea.offsetWidth - this.textarea.clientWidth}px`);
-		styleElm.style.setProperty('--prism-textarea-scrollbar-height',`${this.textarea.offsetHeight - this.textarea.clientHeight}px`);
+		let sw= ( this.textarea.offsetWidth - this.textarea.clientWidth)
+		let sh= (this.textarea.offsetHeight - this.textarea.clientHeight )
+
+		if(this.updateScrollBarVar_minorFix(sw,styleElm.__scrollbar_width__)) sw=styleElm.__scrollbar_width__
+		if(this.updateScrollBarVar_minorFix(sh,styleElm.__scrollbar_height__)) sh=styleElm.__scrollbar_height__ 
+ 
+		if(styleElm.__scrollbar_width__ !== sw  || styleElm.__scrollbar_height__ !== sh ){
+
+			styleElm.__scrollbar_width__ = sw
+			styleElm.__scrollbar_height__ = sh
+
+			styleElm.style.setProperty('--prism-textarea-scrollbar-width',`${styleElm.__scrollbar_width__}px`);
+			styleElm.style.setProperty('--prism-textarea-scrollbar-height',`${styleElm.__scrollbar_height__}px`);
+
+		}
+
 
 	}
 
@@ -1127,14 +1173,10 @@ PL.supportsExecCommand = document.execCommand? undefined : false;
 
 Prism.hooks.add('before-insert', function(env){
 
-	if(typeof Prism.__effective_update_highlightedCode=='string') env.highlightedCode = Prism.__effective_update_highlightedCode
-	else if(Prism.__effective_update_highlightedCode==NO_REPLACEMENT) env.highlightCode = env.element.innerHTML ;
+	if(env.element.__effective_update__ == 2){
 
 
-	if(Prism.__effective_update_highlightedCode==NO_REPLACEMENT){
-
-
-		env.__element__ = env.element
+		env.__element__ = env.element.__onPageCode__ || env.element
 		env.element={innerHTML:function(){}};
 
 
@@ -1146,13 +1188,18 @@ Prism.hooks.add('before-insert', function(env){
 })
 
 
-Prism.hooks.add('before-insert', function(env){
+Prism.hooks.add('after-highlight', function(env){
 
-	if(
-		env.__element__ ) env.element= env.__element__
+	if(	env.__element__ ) env.element= env.__element__
+	//console.log(env)
 
 })
+/*
+Prism.hooks.add('complete',function(env){
 
+	console.log(5656,Object.assign({},env))
+
+})*/
 
 let sTokens =new Map();
 let sTokensU=0x1000;
@@ -1292,23 +1339,22 @@ Prism.hooks.add('before-tokenize', function(env){
 	Prism.hooks.add('__effective_update__',function(env){
 
 
+
 		const Token = Prism.Token;
  
+		let elm_code = env.__element__;
+		if(elm_code) elm_code.__effective_update__=-2;
+
 		if(!env.__previousTokens__) return;
 		if( !isArray(env.tokens) || !isArray(env.__previousTokens__)) return;
 
- 
-
 		let tokens_before=env.__previousTokens__
-
 		let tokens_after=env.tokens
- 
 
-		let elm_code = env.__element__;
-
+		if(elm_code) elm_code.__effective_update__=-1;
 
 		
-		let onPageCode = elm_code.__onPageCode__;
+		let onPageCode = elm_code?.__onPageCode__;
 		if( !onPageCode ) return;
 
 		let prevElements = [...onPageCode.childNodes].filter(elm=>elm.nodeType===1 && elm.hasAttribute('data-prism-stoken') );
@@ -1428,7 +1474,7 @@ Prism.hooks.add('before-tokenize', function(env){
 			//console.log('ff', prevElements_sub, afterElements_sub)
 
 
-			Prism.__effective_update_highlightedCode=NO_REPLACEMENT
+			elm_code.__effective_update__=1;
 
 
 			env.__set_token_empty_to_skip_stringify__ =true;
@@ -1455,6 +1501,8 @@ if(textarea)
 
 	console.log( 12124, textarea.value === elm_code.__onPageCode__.textContent   )
 
+	elm_code.__effective_update__=2;
+
 
 	//console.log('g71',textarea.value)
 
@@ -1477,7 +1525,6 @@ if(textarea)
 			code:env.code
 		}
 
-		Prism.__effective_update_highlightedCode=null;
 
 
 	})
