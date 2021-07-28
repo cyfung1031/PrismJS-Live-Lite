@@ -66,70 +66,70 @@ pre.prism-live > code:empty::before {
 }
 
 
+/* PrismJS Live */
+
 div.prism-live{
-
-	contain:content;
-
+	padding-left: 0;
+	padding-right: 0;
+	padding-bottom: var(--prism-textarea-scrollbar-height, 0px);
+   /* scrollbar-x appears when using adoptive height */
+	padding-right: var(--prism-textarea-scrollbar-width, 0px);
+	contain: content; /* adaptive sizing */
+	transform: var(--prism-live-gpu-acceleration, none);
 }
-
-div.prism-live>pre.prism-live{
-	contain:content;
+div.prism-live pre.prism-live{
 	pointer-events: none;
 	user-select: none;
+	position:relative;
+	z-index:1;
+	transform: inherit;
 }
-div.prism-live>textarea.prism-live{
-	content-visibility: auto;
-}
-
-
-div.prism-live>pre.prism-live *{
+div.prism-live pre.prism-live *{
 	pointer-events: inherit;
 	user-select: inherit;
+	box-sizing: inherit;
+	transform: inherit;
+}
+div.prism-live pre.prism-live > code, div.prism-live pre.prism-live, div.prism-live textarea.prism-live{
+	margin:0;
+	border:0;
+	outline:0;
 	box-sizing: border-box;
+	contain: content; /* adaptive sizing */
 }
- 
-
-.prism-live .token{
-	content-visibility: auto;
-	box-sizing: border-box;
-
+/* full width full height fixing (100.00% W x 100.00% H) */
+div.prism-live pre.prism-live > code{
+	display:inline-block;
+	width:auto;
+	height:auto;
+	min-height: 100%;
+	min-width: 100%;
+	contain: layout; /* .line-numbers-rows is an absolute element painted outside the box */
 }
-
-div.prism-live>pre.prism-live>code{
-	content-visibility: auto;
-	contain:content;
-}
-/*
-.prism-text-line+.prism-text-line::before{
-	content:'\0A\0D';
-}*/
-
-.prism-processing-nocursor{ 
-caret-color: transparent !important; 
-}
-
-prism-plain-newline{
+div.prism-live pre.prism-live prism-plain-newline.token{
+	display: inline;
 	visibility: collapse;
 }
-
-pre.prism-live code .token{
+/*
+div.prism-live pre.prism-live .token{
+	display: inline-block;
+	contain: paint; 
+}*/
+/* textarea is absolute element */
+div.prism-live textarea.prism-live{
+	z-index:2;
+	z-index:var(--prism-live-textarea-zindex, 2);
 	contain: strict;
 	content-visibility: auto;
 }
 
-div.prism-live, pre.prism-live, pre.prism-live>code, textarea.prism-live{
-	padding:0;
-	border:0;
-	outline:0;
-	margin:0;
-	box-sizing: border-box;
+.unready{
+	--prism-live-textarea-zindex: 0;
+	--prism-live-gpu-acceleration: translate3d(0px, 0px, 0px);
 }
-/* full width full height fixing (100.00% W x 100.00% H) */
-pre.prism-live>code{
-	min-height: 100%;
-	min-width: 100%;
+.unready pre.prism-live, .unready pre.prism-live > code{
+	will-change: contents;
 }
-pre.prism-live{
-	padding-bottom:var(--prism-textarea-scrollbar-height, 0px); /* scrollbar-x appears when using adoptive height */
-	padding-right:var(--prism-textarea-scrollbar-width, 0px);
+.unready textarea.prism-live{
+	will-change: contents, scroll-position;
 }

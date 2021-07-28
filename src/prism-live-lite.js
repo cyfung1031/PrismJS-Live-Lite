@@ -360,7 +360,7 @@ var PL = Prism.Live = class PrismLive {
 			this.observer_resize_textarea.unobserve();
 			this.observer_resize_textarea=null;
 		}
-		this.observer_resize_textarea=new ResizeObserver(entries=>{
+		this.observer_resize_textarea=new ResizeObserver(entries=>{ 
 			if(entries[0].target == this.textarea) this.updateScrollBarVar();
 		});
 		this.observer_resize_textarea.observe(this.textarea)
@@ -545,6 +545,27 @@ var PL = Prism.Live = class PrismLive {
 
 
 					//this.pre = null;
+
+
+					const highlighting=(vCode)=>{
+
+						
+						let divParent = this.textarea.closest('div.prism-live')||this.textarea.closest('.prism-live')||this.textarea;
+
+						if(this.__cid___unready>0) this.__cid___unready=clearTimeout(this.__cid___unready)
+
+
+						if(!divParent.classList.contains('unready'))
+						divParent.classList.add('unready')
+
+						Prism.highlightElement(vCode, false);
+
+						
+						if(this.__cid___unready>0) this.__cid___unready=clearTimeout(this.__cid___unready)
+						
+						this.__cid___unready=setTimeout(()=> divParent.classList.remove('unready') ,400)
+						
+					}
 	
 	
 					let vCode =await new Promise(subtask=>{
@@ -570,7 +591,7 @@ var PL = Prism.Live = class PrismLive {
 						this.pre = null;
 						this.code = null;
 
-						Prism.highlightElement(vCode, false);
+						highlighting(vCode);
 
 						this.pre = _pre;
 						this.code =_code;
@@ -603,7 +624,6 @@ var PL = Prism.Live = class PrismLive {
 					
 					if( baseCodeValue !== this.value) {
 						
-						this.observe();
 						return update_resolve();
 					}
 
@@ -643,7 +663,7 @@ var PL = Prism.Live = class PrismLive {
 							
 							Prism.__effective_update_highlightedCode = null;
 	
-							Prism.highlightElement(vCode, false);
+							highlighting(vCode);
 	
 							bCode.parentNode.replaceChild(vCode, bCode);
 							this.code = vCode;
@@ -702,7 +722,7 @@ var PL = Prism.Live = class PrismLive {
 		let styleElm = (pre.closest('div.prism-live')||pre);
 		if(!styleElm) return;
 
-		styleElm.style.setProperty('--prism-textarea-scrollbar-width',`${this.textarea.offsetHeight - this.textarea.clientHeight}px`);
+		styleElm.style.setProperty('--prism-textarea-scrollbar-width',`${this.textarea.offsetWidth - this.textarea.clientWidth}px`);
 		styleElm.style.setProperty('--prism-textarea-scrollbar-height',`${this.textarea.offsetHeight - this.textarea.clientHeight}px`);
 
 	}
