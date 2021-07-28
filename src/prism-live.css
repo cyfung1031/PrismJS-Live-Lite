@@ -112,7 +112,7 @@ prism-plain-newline{
 	visibility: collapse;
 }
 
-pre.prism-live code .token, pre.prism-live code  *{
+pre.prism-live code .token{
 	contain: strict;
 	content-visibility: auto;
 }
