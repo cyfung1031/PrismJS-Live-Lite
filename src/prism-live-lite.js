@@ -522,7 +522,7 @@ var PL = Prism.Live = class PrismLive {
 					// but we want to see the new line we just inserted!
 					// So we insert a zero-width space, which isn't trimmed
 					if (/\n$/.test(this.value)) {
-						code += "\u200b";
+					//	code += "\u200b";
 					}
 					
 					
