@@ -89,28 +89,6 @@ SOFTWARE.
 	
 const setProps= {
 
-	// Set the contents as a string, an element, an object to create an element or an array of these
-	contents: function (val) {
-		if (val || val === 0) {
-			(Array.isArray(val)? val : [val]).forEach(function (child) {
-				var type = typeof child;
-
-				if (/^(string|number)$/.test(type)) {
-					child = document.createTextNode(child + "");
-				}
-
-				if (child instanceof Node) {
-					this.appendChild(child);
-				}
-			}, this);
-		}
-	},
-
-	// Append the element inside another element
-	inside: function (element) {
-		element && element.appendChild(this);
-	},
-
 	// Insert the element before another element
 	before: function (element) {
 		element && element.parentNode.insertBefore(this, element);
@@ -119,11 +97,6 @@ const setProps= {
 	// Insert the element after another element
 	after: function (element) {
 		element && element.parentNode.insertBefore(this, element.nextSibling);
-	},
-
-	// Insert the element before another element's contents
-	start: function (element) {
-		element && element.insertBefore(this, element.firstChild);
 	},
 
 	// Wrap the element around another element
@@ -136,9 +109,9 @@ const setProps= {
 	}
 };
 
-function domCreate (tag, o) {
+function domCreate (uTag, o) {
 
-	let dom = document.createElement(tag);
+	let dom = uTag.nodeType > 0 ? uTag : document.createElement(uTag);
 
 	if(o){
 
@@ -215,13 +188,14 @@ var PL = Prism.Live = class PrismLive {
 
 		if (this.sourceType === "textarea") {
 			this.textarea = this.source;
-			this.code = domCreate("code");
+			this.code = document.createElement("code");
 
 			this.pre = domCreate("pre", {
 				className: this.textarea.className + " no-whitespace-normalization",
-				contents: this.code,
 				before: this.textarea
 			});
+
+			this.pre.appendChild(this.code);
 		}
 		else {
 			this.pre = this.source;
