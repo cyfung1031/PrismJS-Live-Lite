@@ -165,3 +165,14 @@ div.prism-live pre.prism-live > code[class*="language-"]{
 	padding-left:0;
 }
 
+
+/* last enter fix */
+prism-plain-newline.token:last-child::after {
+    content: '\200b';
+	display: inline;
+	user-select: none;
+	pointer-events: none;
+	color:transparent;
+	background: none;
+	visibility: collapse;
+}
