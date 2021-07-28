@@ -7,6 +7,14 @@
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/plugins/line-numbers/prism-line-numbers.min.css" integrity="sha512-cbQXwDFK7lj2Fqfkuxbo5iD1dSbLlJGXGpfTDqbggqjHJeyzx88I3rfwjS38WJag/ihH7lzuGlGHpDBymLirZQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 	<link rel="stylesheet" href="src/prism-live.css">
 	<link rel="stylesheet" href="demo.css">
+	<style>
+		button[id*="theme"]{
+			background:lightgreen;
+		}
+		button[id*="wrap"]{
+			background-color: lightsalmon;
+		}
+	</style>
 	
 	<script>
 
@@ -19,6 +27,8 @@
 <main>
 	<section>
 		<h2>Demos</h2>
+
+		<div id="buttons"></div> 
 
 		<h3>Height grows with code / HTML editing</h3>
 		<textarea class="prism-live language-html fill"></textarea>
@@ -51,5 +61,65 @@
 <script src="src/prism-live-markup.js"></script>-->
 
 <script src="demo.js"></script>
+<script>
+	function invertHex(hex) {
+		return (Number(`0x1${hex}`) ^ 0xFFFFFF).toString(16).substr(1).toUpperCase()
+	}
+
+	async function makeTheme(css){
+
+		let url = `https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/themes/${css}`
+		
+		
+		let link = document.querySelector('link[rel="stylesheet"][href^="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/themes/"]');
+		link.integrity='';
+		link.href=url;
+
+		let i=0;
+
+		window.__cid__link=clearInterval(window.__cid__link)
+		window.__cid__link=setInterval(()=>{
+			
+			if(++i>=8) clearInterval(window.__cid__link)
+
+			let elm =document.querySelector('pre.prism-live')
+			if(!elm) return;
+
+			let c1= [...getComputedStyle(elm).backgroundColor.matchAll( /\d+/g)].map(x=>(+x[0]).toString(16)).join('');
+
+			let c2 = invertHex(c1);
+
+			document.documentElement.style.setProperty('--caret-color','#'+c2)
+
+		},400)
+
+
+
+
+	}
+let btns={
+	'toggle-wrap': ()=>document.querySelector('main').classList.toggle('toggle-wrap'),
+	'theme-prism': ()=>makeTheme('prism.min.css'),
+	'theme-prism-coy': ()=>makeTheme('prism-coy.min.css'),
+	'theme-prism-dark': ()=>makeTheme('prism-dark.min.css'),
+	'theme-prism-okaidia': ()=>makeTheme('prism-okaidia.min.css'),
+	'theme-prism-solarizedlight': ()=>makeTheme('prism-solarizedlight.min.css'),
+	'theme-prism-tomorrow': ()=>makeTheme('prism-tomorrow.min.css'),
+	'theme-prism-twilight': ()=>makeTheme('prism-twilight.min.css'),
+ 
+
+
+
+
+}
+for(var btnId in btns){
+	let btn = document.createElement('button');
+	btn.id=btnId;
+	btn.textContent=btnId;
+	btn.addEventListener('click', btns[btnId], false);
+	document.querySelector('#buttons').appendChild(btn)
+}
+
+</script>
 </body>
 </html>

@@ -7,7 +7,7 @@ div.prism-live {
 
 textarea.prism-live,
 pre.prism-live {
-	padding: .2rem .5rem;
+	/*padding: .2rem .5rem;*/
 	box-sizing: border-box;
 	margin: 0;
 }
@@ -68,6 +68,14 @@ pre.prism-live > code:empty::before {
 
 /* PrismJS Live */
 
+.prism-live textarea{
+
+	caret-color:var(--caret-color, #000) !important; /* added */
+
+}
+
+
+
 div.prism-live{
 	padding-left: 0;
 	padding-right: 0;
@@ -90,13 +98,15 @@ div.prism-live pre.prism-live *{
 	box-sizing: inherit;
 	transform: inherit;
 }
-div.prism-live pre.prism-live > code, div.prism-live pre.prism-live, div.prism-live textarea.prism-live{
+div.prism-live pre.prism-live > code, div.prism-live pre.prism-live, div.prism-live textarea.prism-live
+{
 	margin:0;
 	border:0;
 	outline:0;
 	box-sizing: border-box;
 	contain: content; /* adaptive sizing */
 }
+
 /* full width full height fixing (100.00% W x 100.00% H) */
 div.prism-live pre.prism-live > code{
 	display:inline-block;
@@ -123,13 +133,36 @@ div.prism-live textarea.prism-live{
 	content-visibility: auto;
 }
 
-.unready{
+/* editor padding */
+textarea.prism-live, pre.prism-live{
+	padding:0;
+	padding: .2rem .5rem;
+}
+
+/* .prism-editing-pending */
+.prism-editing-pending{
 	--prism-live-textarea-zindex: 0;
 	--prism-live-gpu-acceleration: translate3d(0px, 0px, 0px);
 }
-.unready pre.prism-live, .unready pre.prism-live > code{
+.prism-editing-pending pre.prism-live{
 	will-change: contents;
 }
-.unready textarea.prism-live{
+.prism-editing-pending textarea.prism-live{
 	will-change: contents, scroll-position;
 }
+
+/* .toggle-wrap */
+.toggle-wrap div.prism-live textarea.prism-live, .toggle-wrap div.prism-live pre.prism-live code{
+	white-space:pre-wrap;
+}
+
+.toggle-wrap div.prism-live pre.prism-live code, .toggle-wrap div.prism-live pre.prism-live .token{
+	display:inline ;
+	position: static;
+}
+
+/* theme css fix */
+div.prism-live pre.prism-live > code[class*="language-"]{
+	padding-left:0;
+}
+

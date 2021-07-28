@@ -555,15 +555,15 @@ var PL = Prism.Live = class PrismLive {
 						if(this.__cid___unready>0) this.__cid___unready=clearTimeout(this.__cid___unready)
 
 
-						if(!divParent.classList.contains('unready'))
-						divParent.classList.add('unready')
+						if(!divParent.classList.contains('prism-editing-pending'))
+						divParent.classList.add('prism-editing-pending')
 
 						Prism.highlightElement(vCode, false);
 
 						
 						if(this.__cid___unready>0) this.__cid___unready=clearTimeout(this.__cid___unready)
 						
-						this.__cid___unready=setTimeout(()=> divParent.classList.remove('unready') ,400)
+						this.__cid___unready=setTimeout(()=> divParent.classList.remove('prism-editing-pending') ,400)
 						
 					}
 	
