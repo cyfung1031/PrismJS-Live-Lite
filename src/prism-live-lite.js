@@ -505,9 +505,9 @@ var PL = Prism.Live = class PrismLive {
 			PL._update_delayed= PL._update_delayed.then(()=>new Promise(update_resolve=>{
 				(async()=>{
 
-					let baseCodeValue = this.value;
+					let baseCodeValue = this.textarea.value;
 	
-					var code = this.value;
+					var code = baseCodeValue;
 	
 					
 	
@@ -518,7 +518,8 @@ var PL = Prism.Live = class PrismLive {
 						code += "\u200b";
 					}
 					
-					if(this.__last_update_code__ === code || code !== this.textarea.value ) return update_resolve();
+					
+					if(this.__last_update_code__ === code ) return update_resolve();
 
 					
 					this.__last_update_code__ = code;
@@ -557,12 +558,17 @@ var PL = Prism.Live = class PrismLive {
 						await new Promise(requestAnimationFrame);
 						if( baseCodeValue !== this.value) return update_resolve();
 						
-						let _pre = this.pre;
 						this.unobserve();
+						let _pre = this.pre, _code = this.code;
 						this.pre = null;
+						this.code = null;
+
 						Prism.highlightElement(vCode, false);
+
 						this.pre = _pre;
+						this.code =_code;
 						this.observe();
+
 
 						delete vCode.__onPageCode__;
 
@@ -575,7 +581,6 @@ var PL = Prism.Live = class PrismLive {
 							isEU=true;
 							//console.log(1233)
 						}
-						vCode.__onPageCode__ = null;
 	
 						subtask(vCode);
 	
@@ -597,29 +602,50 @@ var PL = Prism.Live = class PrismLive {
 
 					
 
-					if(!isEU || this.value !== this.code.textContent){
+					let isContentCorrect = this.value === this.code.textContent
+
+
+
+					if(!isContentCorrect){
+
+
 	
-
-						let _pre = this.pre;
-						
-						this.pre = null;
-	
-						let vCode_P = bCode.parentNode.cloneNode(false), vCode = bCode.cloneNode(false);
-						vCode_P.appendChild(vCode);
-
-						delete vCode.__onPageCode__;
-						vCode.textContent = this.value;
-						
-						Prism.__effective_update_highlightedCode = null;
-
-						Prism.highlightElement(vCode, false);
-
-
-						
 						this.unobserve();
-						bCode.parentNode.replaceChild(vCode, bCode);
-						this.code = vCode;
+						let _pre = this.pre, _code = this.code;
+						this.pre = null;
+						this.code = null;
+	
+
+						if(!isEU){
+
+							//initial
+
+							bCode.parentNode.replaceChild(vCode, bCode);
+							this.code = vCode;
+
+						}else{
+
+							//exceptional case
+
+
+							let vCode_P = bCode.parentNode.cloneNode(false), vCode = bCode.cloneNode(false);
+							vCode_P.appendChild(vCode);
+	
+							delete vCode.__onPageCode__;
+							vCode.textContent = this.value;
+							
+							Prism.__effective_update_highlightedCode = null;
+	
+							Prism.highlightElement(vCode, false);
+	
+							bCode.parentNode.replaceChild(vCode, bCode);
+							this.code = vCode;
+
+						}
+
+
 						this.pre = _pre;
+						//this.code =_code;
 						this.observe();
 						
 
@@ -1254,8 +1280,7 @@ Prism.hooks.add('before-tokenize', function(env){
 
 
 		const Token = Prism.Token;
-
-
+ 
 		if(!env.__previousTokens__) return;
 		if( !isArray(env.tokens) || !isArray(env.__previousTokens__)) return;
 
@@ -1264,19 +1289,21 @@ Prism.hooks.add('before-tokenize', function(env){
 		let tokens_before=env.__previousTokens__
 
 		let tokens_after=env.tokens
+ 
 
 		let elm_code = env.__element__;
 
 
-		if( !elm_code.__onPageCode__ ) return;
 		
+		let onPageCode = elm_code.__onPageCode__;
+		if( !onPageCode ) return;
 
-		let prevElements = [...elm_code.__onPageCode__.childNodes].filter(elm=>elm.nodeType===1 && elm.hasAttribute('data-prism-stoken') );
+		let prevElements = [...onPageCode.childNodes].filter(elm=>elm.nodeType===1 && elm.hasAttribute('data-prism-stoken') );
 
-
+ 
 
 		if(tokens_before.length != prevElements.length) return;
-
+ 
 
 			let skipBefore = 0;
 			let skipAfter = 0;
@@ -1316,16 +1343,17 @@ Prism.hooks.add('before-tokenize', function(env){
 			let v0=u0; //>=0; same as u0
 			let v1= tokens_after.length-skipAfter-1;
 
-			
-
-
 
 			const log =()=>{
 				console.log('!!before', `keep[0,${u0-1}]`, `change[${u0},${u1}]`, `keep[${u1+1},${tokens_before.length-1}]` );
 				console.log('!!after', `keep[0,${v0-1}]`, `change[${v0},${v1}]`, `keep[${v1+1},${tokens_after.length-1}]` );
-			}
-			
+			} 
+
 			log();
+
+
+			
+			if(u1<u0 && v1<v0) return;  // idenitical?
 
 			let subTokens =  v1>=v0? tokens_after.slice(v0, v1+1): [];
 			let afterElements_sub=[];
@@ -1367,11 +1395,16 @@ Prism.hooks.add('before-tokenize', function(env){
 				pNode = rNode.parentNode;
 				rNode=rNode.nextSibling;
 
-			}else if( v0<prevElements.length ){
+			}else{
 
-
-				pNode = prevElements[v0].parentNode;
-				rNode = prevElements[v0].nextSibling;
+				let jdxInsertAfter = v0-1;
+				if(jdxInsertAfter>=0){
+					pNode = prevElements[jdxInsertAfter].parentNode;
+					rNode = prevElements[jdxInsertAfter].nextSibling;
+				}else{
+					pNode = onPageCode;
+					rNode = onPageCode.firstChild;
+				}
 
 			}
 
@@ -1408,6 +1441,14 @@ if(textarea)
 
 
 	console.log( 12124, textarea.value === elm_code.__onPageCode__.textContent   )
+
+
+	//console.log('g71',textarea.value)
+
+	//console.log('g72',elm_code.__onPageCode__.textContent)
+
+	//console.log('g73',JSON.parse(JSON.stringify(tokens_after)))
+	//console.log('g74',JSON.parse(JSON.stringify(subTokens)))
 
 
 
