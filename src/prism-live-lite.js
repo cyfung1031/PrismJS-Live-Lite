@@ -364,6 +364,7 @@ var PL = Prism.Live = class PrismLive {
 			if(entries[0].target == this.textarea) this.updateScrollBarVar();
 		});
 		this.observer_resize_textarea.observe(this.textarea)
+		requestAnimationFrame(() => {this.updateScrollBarVar();});
 
 
 		// Copy styles with a delay
