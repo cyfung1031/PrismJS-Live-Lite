@@ -116,3 +116,16 @@ pre.prism-live code .token{
 	contain: strict;
 	content-visibility: auto;
 }
+
+div.prism-live, pre.prism-live, pre.prism-live>code, textarea.prism-live{
+	padding:0;
+	border:0;
+	outline:0;
+	margin:0;
+	box-sizing: border-box;
+}
+/* full width full height fixing (100.00% W x 100.00% H) */
+pre.prism-live>code{
+	min-height: 100%;
+	min-width: 100%;
+}
