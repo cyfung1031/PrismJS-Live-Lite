@@ -8,6 +8,12 @@ This is based on the original PrismJS Live hosted in https://github.com/PrismJS/
 ## Differences from LeaVerou's original PrismJS ##
 - **No External Library `Bliss.js`**
 - **No `prismjs-live-xxx.js`**
+- **Not holding the `input` event for Coding Content Update**
+- **Replaced all `string.slice(start,end)` to `string.substring(start,end)`**
+- **All text nodes are wrapped with `prism-plain`**
+- **All `newline` text nodes are wrapped with `prism-plain-newline`**
+- **No Replacement of FULL Content of Coding Area, only update the changed DOMs**
+- **[Optional] Generate `prism-content-line` for each line (possibly increase performance when editing)**
 
 ## Files ##
 Required CSS files:
