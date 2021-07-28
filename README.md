@@ -3,7 +3,11 @@
 
 ## About ##
 
-This is based on the original PrismJS Live hosted in https://github.com/PrismJS/live/
+This is based on the original PrismJS Live developed by *Lea Verou* , the developer of *PrismJS* and *Bliss*.
+
+Original Designer: [@LeaVerou]( https://github.com/LeaVerou )
+
+Original GitHub Repository: [PrismJS Live]( https://github.com/PrismJS/live/ )
 
 ## Differences from LeaVerou's original PrismJS ##
 - **No External Library `Bliss.js`**
