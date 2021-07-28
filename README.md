@@ -9,7 +9,8 @@ Original Designer: [@LeaVerou]( https://github.com/LeaVerou )
 
 Original GitHub Repository: [PrismJS Live]( https://github.com/PrismJS/live/ )
 
-## Highlights (Differences from LeaVerou's original PrismJS) ##
+## Highlights ##
+Here are the highlighted differences from LeaVerou's original PrismJS.
 ### Smaller Package Size ###
 - **No External Library `Bliss.js`**
 - **No `prismjs-live-xxx.js`** (it is only for advanced features)
@@ -19,11 +20,12 @@ Original GitHub Repository: [PrismJS Live]( https://github.com/PrismJS/live/ )
 - **All `newline` text nodes are wrapped with `prism-plain-newline`**
 - **No Event Blocking in the `input` event for Textarea Editing**
 ### Bug Fix ###
-- **Fixed scrollbar issue for adaptive sizing
+- **Fixed scrollbar issue for adaptive sizing**
 ### Other ###
 - **Replaced all `string.slice(start,end)` to `string.substring(start,end)`**
+- **All element nodes provided with `data-prism-stoken` for content comparision** 
 - **[Optional] Generate `prism-content-line` for each line (possibly increase performance when editing)**
-- 
+
 ## Files ##
 Required CSS files:
 
