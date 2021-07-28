@@ -157,8 +157,7 @@ textarea.prism-live, pre.prism-live{
 }
 
 .toggle-wrap div.prism-live pre.prism-live code, .toggle-wrap div.prism-live pre.prism-live .token{
-	display:inline ;
-	position: static;
+	display:inline;
 }
 
 /* theme css fix */
