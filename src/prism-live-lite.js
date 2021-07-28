@@ -38,12 +38,18 @@ SOFTWARE.
 
 
 */
+ 
 
 
 
 
 
 (async function() {
+
+
+	const Prism = window.Prism;
+
+	const NO_REPLACEMENT = Symbol();
 
 /**
  * 
@@ -248,13 +254,16 @@ var PL = Prism.Live = class PrismLive {
 		}
 
 		domBind(this.textarea, {
-			"input": evt => this.update(),
+			"input": evt => this.update(false),
 
 			"keyup": evt => {
 				if (evt.key == "Enter") { // Enter
 					// Maintain indent on line breaks
-					this.insert(this.currentIndent);
-					this.syncScroll();
+					PL._update_delayed=PL._update_delayed.then(()=>new Promise(update_resolve=>{
+							this.insert(this.currentIndent);
+							this.syncScroll();
+							update_resolve();
+					}))
 				}
 			},
 
@@ -324,9 +333,9 @@ var PL = Prism.Live = class PrismLive {
 			},
 
 			"click": evt => {
-				var l = this.getLine();
-				var v = this.value;
-				var ss = this.selectionStart;
+				//var l = this.getLine();
+				//var v = this.value;
+				//var ss = this.selectionStart;
 				//console.log(ss, v[ss], l, v.slice(l.start, l.end));
 			},
 
@@ -462,6 +471,7 @@ var PL = Prism.Live = class PrismLive {
 		return this.textarea.value;
 	}
 	set value(v) {
+		if(this.textarea.value!==v)
 		this.textarea.value = v;
 	}
 
@@ -470,7 +480,7 @@ var PL = Prism.Live = class PrismLive {
 	}
 
 	get currentIndent() {
-		var before = this.value.slice(0, this.selectionStart-1);
+		var before = this.value.substring(0, this.selectionStart-1);
 		return PL.match(before, /^[\t ]*/mg, "", -1);
 	}
 
@@ -488,27 +498,146 @@ var PL = Prism.Live = class PrismLive {
 		return PL.languages[lang] || PL.languages.DEFAULT;
 	}
 
-	update (force) {
-		var code = this.value;
+	update () {
+ 
 
-		// If code ends in newline then browser "conveniently" trims it
-		// but we want to see the new line we just inserted!
-		// So we insert a zero-width space, which isn't trimmed
-		if (/\n$/.test(this.value)) {
-			code += "\u200b";
-		}
+		let tf = ()=>{
+			PL._update_delayed= PL._update_delayed.then(()=>new Promise(update_resolve=>{
+				(async()=>{
 
-		if (!force && this.code.textContent === code && this.code.querySelector(".token")) {
-			// Already highlighted
-			return;
-		}
+					let baseCodeValue = this.value;
+	
+					var code = this.value;
+	
+					
+	
+					// If code ends in newline then browser "conveniently" trims it
+					// but we want to see the new line we just inserted!
+					// So we insert a zero-width space, which isn't trimmed
+					if (/\n$/.test(this.value)) {
+						code += "\u200b";
+					}
+					
+					if(this.__last_update_code__ === code || code !== this.textarea.value ) return update_resolve();
 
-		this.unobserve();
-		this.code.textContent = code;
+					
+					this.__last_update_code__ = code;
+	
+					//console.log(1212)
+	
+	
+	
+					//await new Promise(setTimeout)
+	
+					let bCode = this.code;
+	
+	
+					let isEU = false;
 
-		Prism.highlightElement(this.code);
 
-		this.observe();
+
+					//this.pre = null;
+	
+	
+					let vCode =await new Promise(subtask=>{
+	
+	
+						(async()=>{ 
+	
+							let vCode_P = bCode.parentNode.cloneNode(false), vCode = bCode.cloneNode(false);
+							vCode_P.appendChild(vCode);
+	
+						vCode.__onPageCode__ = bCode;
+						vCode.textContent = code;
+						
+						Prism.__effective_update_highlightedCode = null;
+	
+	
+	
+						await new Promise(requestAnimationFrame);
+						if( baseCodeValue !== this.value) return update_resolve();
+						
+						let _pre = this.pre;
+						this.unobserve();
+						this.pre = null;
+						Prism.highlightElement(vCode, false);
+						this.pre = _pre;
+						this.observe();
+
+						delete vCode.__onPageCode__;
+
+						if( baseCodeValue !== this.value) return update_resolve();
+						await new Promise(requestAnimationFrame) 
+						
+						if( baseCodeValue !== this.value) return update_resolve();
+						 
+						if(Prism.__effective_update_highlightedCode===NO_REPLACEMENT){
+							isEU=true;
+							//console.log(1233)
+						}
+						vCode.__onPageCode__ = null;
+	
+						subtask(vCode);
+	
+					})()
+	
+	
+					})
+
+
+	
+					console.log(12121, this.value === this.code.textContent )
+
+					
+					if( baseCodeValue !== this.value) {
+						
+						this.observe();
+						return update_resolve();
+					}
+
+					
+
+					if(!isEU || this.value !== this.code.textContent){
+	
+
+						let _pre = this.pre;
+						
+						this.pre = null;
+	
+						let vCode_P = bCode.parentNode.cloneNode(false), vCode = bCode.cloneNode(false);
+						vCode_P.appendChild(vCode);
+
+						delete vCode.__onPageCode__;
+						vCode.textContent = this.value;
+						
+						Prism.__effective_update_highlightedCode = null;
+
+						Prism.highlightElement(vCode, false);
+
+
+						
+						this.unobserve();
+						bCode.parentNode.replaceChild(vCode, bCode);
+						this.code = vCode;
+						this.pre = _pre;
+						this.observe();
+						
+
+
+					
+					}
+	
+	
+					update_resolve()
+	
+				})();
+	
+			}));
+	
+		};
+
+		tf()
+
 	}
 
 	syncStyles() {
@@ -557,7 +686,7 @@ var PL = Prism.Live = class PrismLive {
 			index = 0;
 		}
 
-		return this.value.slice(index, this.selectionStart);
+		return this.value.substring(index, this.selectionStart);
 	}
 
 	getLine(offset = this.selectionStart) {
@@ -587,7 +716,7 @@ var PL = Prism.Live = class PrismLive {
 			index = undefined;
 		}
 
-		return this.value.slice(this.selectionEnd, index);
+		return this.value.substring(this.selectionEnd, index);
 	}
 
 	setCaret(pos) {
@@ -686,7 +815,7 @@ var PL = Prism.Live = class PrismLive {
 	wrap ({before, after, start = this.selectionStart, end = this.selectionEnd} = {}) {
 		var ss = this.selectionStart;
 		var se = this.selectionEnd;
-		var between = this.value.slice(start, end);
+		var between = this.value.substring(start, end);
 
 		this.set(before + between + after, {start, end});
 
@@ -741,13 +870,13 @@ var PL = Prism.Live = class PrismLive {
 
 			if (comments.singleline && commentText.indexOf(comments.singleline) === 0) {
 				var end = start + commentText.length;
-				this.set(this.value.slice(start + comments.singleline.length, end), {start, end});
+				this.set(this.value.substring(start + comments.singleline.length, end), {start, end});
 				this.moveCaret(-comments.singleline.length);
 			}
 			else {
 				comments = comments.multiline || comments;
 				var end = start + commentText.length - comments[1].length;
-				this.set(this.value.slice(start + comments[0].length, end), {start, end: end + comments[1].length});
+				this.set(this.value.substring(start + comments[0].length, end), {start, end: end + comments[1].length});
 			}
 		}
 		else {
@@ -886,6 +1015,8 @@ var PL = Prism.Live = class PrismLive {
 	}
 };
 
+
+
 // Static properties
 Object.assign(PL, {
 	all: new WeakMap(),
@@ -948,10 +1079,443 @@ Object.assign(PL, {
 				return t[property] || cache[property] || (cache[property] = fnRegExp.bind(PL, property));
 			}
 		});
-	})()
+	})(),
+
+	_update_delayed: Promise.resolve()
 });
 
 PL.supportsExecCommand = document.execCommand? undefined : false;
+
+Prism.hooks.add('before-insert', function(env){
+
+	if(typeof Prism.__effective_update_highlightedCode=='string') env.highlightedCode = Prism.__effective_update_highlightedCode
+	else if(Prism.__effective_update_highlightedCode==NO_REPLACEMENT) env.highlightCode = env.element.innerHTML ;
+
+
+	if(Prism.__effective_update_highlightedCode==NO_REPLACEMENT){
+
+
+		env.__element__ = env.element
+		env.element={innerHTML:function(){}};
+
+
+	}
+
+	//env.highlightedCode
+//console.log(444, env);
+
+})
+
+
+Prism.hooks.add('before-insert', function(env){
+
+	if(
+		env.__element__ ) env.element= env.__element__
+
+})
+
+
+let sTokens =new Map();
+let sTokensU=0x1000;
+
+
+
+function domBatchRemove(elements){
+
+	let a= document.createDocumentFragment(); 
+	a.textContent='x'; 
+	a.firstChild.replaceWith(...elements)
+
+	a.textContent='';
+	a=null
+
+
+}
+
+
+
+function domBatchAdd(elements, parentNode, insertBefore){
+
+	let a= document.createDocumentFragment(); 
+	a.textContent='x'; 
+	a.firstChild.replaceWith(...elements)
+
+	parentNode.insertBefore(a, insertBefore);
+
+	a=null;
+
+}
+
+
+
+Prism.hooks.add('before-tokenize', function(env){
+
+	//console.log(555, env);
+	
+	})
+
+
+	let isArray =(x)=>typeof x?.[Symbol.iterator] == 'function' && typeof x =='object';
+
+	function tokensReplacement (tokens){
+
+
+		if(!isArray(tokens)) return tokens;
+
+
+		const Token = Prism.Token;
+		let newTokens = [];
+		for(var i=0;i<tokens.length;i++){
+
+			let token = tokens[i]; 
+			if (typeof token =='string'){
+
+
+				tps=token.split(/((?:\r\n|\n\r|\r|\n)\u200b?)/)
+ 
+
+				for(var j=0;j<tps.length;j++){
+
+					if(j%2){
+							newTokens.push(new Token('plain-newline',  tps[j], undefined, tps[j]));
+
+					}else{
+
+						if(tps[j]) newTokens.push(new Token('plain',  tps[j], undefined, tps[j]));
+
+					}
+
+
+				}
+
+				
+				//plain element could be with empty textnode
+				//this prevents newline bug
+				token = null;
+
+
+
+			}else if(token instanceof Token && isArray(token.content)){
+				token.content = tokensReplacement(token.content);
+				
+			}
+
+			if(token) newTokens.push(token)
+
+
+
+		}
+
+		return newTokens;
+
+	};
+
+	class TLine extends Array{
+
+		tokenize(){
+			const Token = Prism.Token;
+
+			const len=(x)=>{
+
+				if(x instanceof Token) return x.length;
+				else if(isArray(x)) return x.reduce((a,c)=>a+len(c),0);
+				else if(typeof x =='string') return x.length;
+				else return 0; 
+			}
+  
+
+			return new Token("content-line", [...this], undefined , new Array( 1+ len(this) ).join() )
+		}
+	};
+
+	let hl_workingOn = null;
+	let previousTokenMap ={};
+
+
+	let onWrap_sToken=(env)=>{
+
+		let stringify = env.content;
+
+		if(typeof stringify =='string'){
+			
+			if(!sTokens.has(stringify)) sTokens.set(stringify,++sTokensU);
+			
+			env.attributes['data-prism-stoken']= ""+sTokens.get(stringify)
+		
+		}
+
+
+
+	}
+
+
+
+	Prism.hooks.add('__effective_update__',function(env){
+
+
+		const Token = Prism.Token;
+
+
+		if(!env.__previousTokens__) return;
+		if( !isArray(env.tokens) || !isArray(env.__previousTokens__)) return;
+
+ 
+
+		let tokens_before=env.__previousTokens__
+
+		let tokens_after=env.tokens
+
+		let elm_code = env.__element__;
+
+
+		if( !elm_code.__onPageCode__ ) return;
+		
+
+		let prevElements = [...elm_code.__onPageCode__.childNodes].filter(elm=>elm.nodeType===1 && elm.hasAttribute('data-prism-stoken') );
+
+
+
+		if(tokens_before.length != prevElements.length) return;
+
+
+			let skipBefore = 0;
+			let skipAfter = 0;
+
+
+			let hashs_before, hashs_after;
+
+			hashs_before= tokens_before.__tokens_stringify__.split('<&\u02A6\u00a0&>')
+			hashs_after= tokens_after.__tokens_stringify__.split('<&\u02A6\u00a0&>')
+ 
+
+
+			for(let i=0, l = Math.min(hashs_after.length, hashs_before.length);i<l;i++){
+
+				if( hashs_before[i] === hashs_after[i] ) skipBefore++;
+				else break;
+
+			}
+
+			minS=skipBefore;
+
+			for(let i=0, l = Math.min(hashs_after.length, hashs_before.length)-skipBefore;i<l;i++){
+
+				let j1 = hashs_before.length-1-i;
+				let j2 = hashs_after.length-1-i;
+
+				if( hashs_before[j1] === hashs_after[j2] ) skipAfter++;
+				else break;
+
+				
+
+			}
+
+
+			let u0=skipBefore; //>=0
+			let u1=tokens_before.length-skipAfter-1;
+			let v0=u0; //>=0; same as u0
+			let v1= tokens_after.length-skipAfter-1;
+
+			
+
+
+
+			const log =()=>{
+				console.log('!!before', `keep[0,${u0-1}]`, `change[${u0},${u1}]`, `keep[${u1+1},${tokens_before.length-1}]` );
+				console.log('!!after', `keep[0,${v0-1}]`, `change[${v0},${v1}]`, `keep[${v1+1},${tokens_after.length-1}]` );
+			}
+			
+			log();
+
+			let subTokens =  v1>=v0? tokens_after.slice(v0, v1+1): [];
+			let afterElements_sub=[];
+
+
+			if(subTokens.length>0){
+
+				//console.log(223,subTokens)
+
+				let html_subtokens=Token.stringify(Prism.util.encode(subTokens), env.language);
+
+
+				let div=document.createElement('pesudo-element-holder'); // noscript, createDocumentFragment are not suitable for innerHTML
+				div.innerHTML=html_subtokens;
+
+				afterElements_sub = [...div.childNodes].filter(elm=>elm.nodeType===1 && elm.hasAttribute('data-prism-stoken') );
+
+				if(afterElements_sub.length !== subTokens.length) return;
+
+			}
+
+ 
+			let prevElements_sub =  u1>=u0?prevElements.slice(u0,u1+1):[];
+
+			//console.log('dd', prevElements_sub, afterElements_sub)
+
+			let rNode = null, pNode;
+			if(prevElements_sub.length>0){
+
+				for(const s of prevElements_sub){
+					if(rNode && rNode !=s.previousSibling){
+						rNode = null;
+						break;
+					}
+					rNode = s;
+				}
+				if(!rNode) return;
+
+				pNode = rNode.parentNode;
+				rNode=rNode.nextSibling;
+
+			}else if( v0<prevElements.length ){
+
+
+				pNode = prevElements[v0].parentNode;
+				rNode = prevElements[v0].nextSibling;
+
+			}
+
+			//console.log('ee', prevElements_sub, afterElements_sub)
+			if( prevElements_sub.includes( rNode)  ) return;
+
+
+			//console.log('ff', prevElements_sub, afterElements_sub)
+
+
+			Prism.__effective_update_highlightedCode=NO_REPLACEMENT
+
+
+			env.__set_token_empty_to_skip_stringify__ =true;
+ 
+
+
+			if(prevElements_sub.length===1){
+
+				prevElements_sub[0].replaceWith(...afterElements_sub);
+
+			}else if(pNode){
+
+				domBatchRemove(prevElements_sub)
+				domBatchAdd(afterElements_sub, pNode, rNode);
+			}
+ 
+let textarea = elm_code.__onPageCode__.parentNode.parentNode.querySelector('textarea')
+if(textarea)
+
+{
+
+	//console.log( 12120, textarea.value , elm_code.__onPageCode__.textContent   )
+
+
+	console.log( 12124, textarea.value === elm_code.__onPageCode__.textContent   )
+
+
+
+}
+
+
+	})
+
+	Prism.hooks.add('before-highlight', function(env){
+
+		hl_workingOn={
+			element:env.element,
+			code:env.code
+		}
+
+		Prism.__effective_update_highlightedCode=null;
+
+
+	})
+
+
+	// This is NOT a replacement of JSON.stringify
+	// It is just a trick for tokens' comparision
+	function tokensStringify(x, w){
+		if(typeof x =='object' && x){
+			let p =[];
+			if(isArray(x)){
+				for(const z of x) p.push(`[${ tokensStringify(z) }]`)
+			}else{
+				for(var k in x) p.push(`{"${k}": ${tokensStringify(x[k])}}`)
+			}
+			return p.join(w||', ')
+		}
+		return `${typeof x}"${x}"`;
+	}
+
+	Prism.hooks.add('after-tokenize', function(env){
+	
+		const Token = Prism.Token;
+
+		env.tokens=tokensReplacement(env.tokens);
+
+		Prism.hooks.run('after-tokenize-tokens-replacement', env)
+
+
+
+		/*
+
+		let lines =[new TLine];
+
+		for(const token of env.tokens){
+			
+			if(token instanceof Token && token.type=='plain-newline'){
+
+				lines[lines.length-1].push(token)
+				lines.push(new TLine)
+			}else{
+				lines[lines.length-1].push(token)
+			}
+		}
+
+		if(lines.length>1){
+
+			for(var i =0; i<lines.length;i++){
+				let line = lines[i];
+				if(line instanceof TLine) lines[i]= line.tokenize()
+			}
+
+			env.tokens=lines;
+		}
+
+		
+		Prism.hooks.run('after-tokenize-lines-replacement', env)
+
+		*/
+
+
+
+		env.tokens.__tokens_stringify__ = tokensStringify(env.tokens,'<&\u02A6\u00a0&>')
+
+		
+		Prism.hooks.run('after-tokenize-tokens-stringify', env)
+
+		 if(typeof env.code =='string' && hl_workingOn && hl_workingOn.code === env.code && hl_workingOn.element && hl_workingOn.element.nodeType==1){
+			let env_copy = Object.assign({},env);
+			let elm_code = hl_workingOn.element
+			env_copy.__element__ = elm_code
+			if(!elm_code.hasAttribute('data-prism-code-uid')) elm_code.setAttribute('data-prism-code-uid',`${ ++sTokensU }`)
+			env_copy.__previousTokens__ = previousTokenMap[ elm_code.getAttribute('data-prism-code-uid') ] ||null;
+			Prism.hooks.run('__effective_update__', env_copy)
+			previousTokenMap[ elm_code.getAttribute('data-prism-code-uid') ] =  env_copy.tokens;
+			if(env_copy.__set_token_empty_to_skip_stringify__) env.tokens=[];
+		}
+
+
+		Prism.hooks.run('after-tokenize-completed', env)
+		
+		})
+
+		Prism.hooks.add('wrap', function(env){
+
+			if(env.type =='plain') env.tag='prism-plain';
+			else if(env.type =='plain-newline') env.tag='prism-plain-newline';
+			else if(env.type =='content-line') env.tag='prism-content-line';
+			onWrap_sToken(env)
+			
+			})
+
 
 function onReady(){
 	for(const source of document.querySelectorAll(":not(.prism-live) > textarea.prism-live, :not(.prism-live) > pre.prism-live")){

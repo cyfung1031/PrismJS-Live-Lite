@@ -38,17 +38,17 @@ textarea.prism-live {
 	}
 }
 
-	/* Setting specific colors is needed
-	 * because otherwise Firefox shows blank text */
-	textarea.prism-live::-moz-selection {
-		background: var(--selection-background);
-		color: var(--selection-color);
-	}
+/* Setting specific colors is needed
+	* because otherwise Firefox shows blank text */
+textarea.prism-live::-moz-selection {
+	background: var(--selection-background);
+	color: var(--selection-color);
+}
 
-	textarea.prism-live::selection {
-		background: var(--selection-background);
-		color: var(--selection-color);
-	}
+textarea.prism-live::selection {
+	background: var(--selection-background);
+	color: var(--selection-color);
+}
 
 pre.prism-live {
 	flex: 1;
@@ -61,6 +61,58 @@ pre.prism-live {
 	padding-right: var(--scrollbar-width);
 }
 
-	pre.prism-live > code:empty::before {
-		content: " "
-	}
+pre.prism-live > code:empty::before {
+	content: " "
+}
+
+
+div.prism-live{
+
+	contain:content;
+
+}
+
+div.prism-live>pre.prism-live{
+	contain:content;
+	pointer-events: none;
+	user-select: none;
+}
+div.prism-live>textarea.prism-live{
+	content-visibility: auto;
+}
+
+
+div.prism-live>pre.prism-live *{
+	pointer-events: inherit;
+	user-select: inherit;
+	box-sizing: border-box;
+}
+ 
+
+.prism-live .token{
+	content-visibility: auto;
+	box-sizing: border-box;
+
+}
+
+div.prism-live>pre.prism-live>code{
+	content-visibility: auto;
+	contain:content;
+}
+/*
+.prism-text-line+.prism-text-line::before{
+	content:'\0A\0D';
+}*/
+
+.prism-processing-nocursor{ 
+caret-color: transparent !important; 
+}
+
+prism-plain-newline{
+	visibility: collapse;
+}
+
+pre.prism-live code .token, pre.prism-live code  *{
+	contain: strict;
+	content-visibility: auto;
+}
