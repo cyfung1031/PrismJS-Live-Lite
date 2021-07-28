@@ -129,3 +129,7 @@ pre.prism-live>code{
 	min-height: 100%;
 	min-width: 100%;
 }
+pre.prism-live{
+	padding-bottom:var(--prism-textarea-scrollbar-height, 0px); /* scrollbar-x appears when using adoptive height */
+	padding-right:var(--prism-textarea-scrollbar-width, 0px);
+}

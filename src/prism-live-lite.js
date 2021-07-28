@@ -348,11 +348,23 @@ var PL = Prism.Live = class PrismLive {
 		});
 
 		// this.syncScroll();
-		this.textarea.addEventListener("scroll", this, {passive: true});
+		this.textarea.addEventListener("scroll", (evt)=>this.syncScroll(), {passive: true});
 
 		domBind(window, {
 			"resize": evt => this.syncStyles()
 		});
+
+
+		if(this.observer_resize_textarea){
+			this.observer_resize_textarea.takeRecords();
+			this.observer_resize_textarea.unobserve();
+			this.observer_resize_textarea=null;
+		}
+		this.observer_resize_textarea=new ResizeObserver(entries=>{
+			if(entries[0].target == this.textarea) this.updateScrollBarVar();
+		});
+		this.observer_resize_textarea.observe(this.textarea)
+
 
 		// Copy styles with a delay
 		requestAnimationFrame(() => {
@@ -376,12 +388,6 @@ var PL = Prism.Live = class PrismLive {
 		this.observe();
 
 		this.source.dispatchEvent(new CustomEvent("prism-live-init", {bubbles: true, detail: this}));
-	}
-
-	handleEvent(evt) {
-		if (evt.type === "scroll") {
-			this.syncScroll();
-		}
 	}
 
 	observe () {
@@ -688,11 +694,23 @@ var PL = Prism.Live = class PrismLive {
 		this.update();
 	}
 
+
+	updateScrollBarVar(){
+		
+		let pre = this.pre;
+		let styleElm = (pre.closest('div.prism-live')||pre);
+		if(!styleElm) return;
+
+		styleElm.style.setProperty('--prism-textarea-scrollbar-width',`${this.textarea.offsetHeight - this.textarea.clientHeight}px`);
+		styleElm.style.setProperty('--prism-textarea-scrollbar-height',`${this.textarea.offsetHeight - this.textarea.clientHeight}px`);
+
+	}
+
 	syncScroll() {
 		if (this.pre.clientWidth === 0 && this.pre.clientHeight === 0) {
 			return;
 		}
-
+		//this.updateScrollBarVar();
 		this.pre.scrollTop = this.textarea.scrollTop;
 		this.pre.scrollLeft = this.textarea.scrollLeft;
 	}
