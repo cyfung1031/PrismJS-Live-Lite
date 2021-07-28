@@ -42,4 +42,4 @@ Required JavaScript files:
 
 ## Known Issues ##
 - Line Numbers Plugin is broken with Theme Coy. Please refer to PrismJS GitHub.
-- Wrap would not work with Prism Live. There is a need of rewriting the plugin.
+- Wrap would not perfectly work with Prism Live. There is a need of rewriting the plugin.
